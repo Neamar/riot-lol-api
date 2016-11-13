@@ -125,51 +125,70 @@ describe("Riot queue", function() {
     });
   });
 
-  it.skip("should cache results when cacheable=true", function(done) {
-    nock('https://euw.api.pvp.net')
-      .get('/cacheable')
-      .query(true)
-      .reply(200, {ok: 'first time'});
+  describe("Requester with cache", function() {
+    it("should let user specify its own cache function", function(done) {
+      var riotRequest = new RiotRequest("fake", null, {
+        get: function(region, endpoint, cacheStrategy, cb) {
+          cb(null, cacheStrategy);
+        },
+        set: function(region, endpoint, cacheStrategy, data) {
+          // jshint unused:false
+          // Do nothing.
+        }
+      });
 
-    nock('https://euw.api.pvp.net')
-      .get('/cacheable')
-      .query(true)
-      .reply(200, {ok: 'second time'});
+      var cacheStrategy = 150;
+      riotRequest.request('EUW', '/cacheable', cacheStrategy, function(err, data) {
+        assert.ifError(err);
+        assert.equal(data, cacheStrategy);
 
-    async.waterfall([
-      function(cb) {
-        // Should fetch resource the first time
-        riotRequest.request('EUW', '/cacheable', true, function(err, res) {
-          if(err) {
-            return cb(err);
-          }
+        done();
+      });
+    });
 
-          assert.equal(res.ok, 'first time');
-          cb();
-        });
-      },
-      function(cb) {
-        // Should reuse cached value and not call the second nock request
-        riotRequest.request('EUW', '/cacheable', true, function(err, res) {
-          if(err) {
-            return cb(err);
-          }
+    it("should call the setter function on the cache object", function(done) {
+      var defaultPayload = {ok: true};
+      nock('https://euw.api.pvp.net')
+        .get('/cacheable')
+        .query(true)
+        .reply({}, defaultPayload);
 
-          assert.equal(res.ok, 'first time');
-          cb();
-        });
-      },
-      function(cb) {
-        // Witch cacheable=false however, should do a new call
-        riotRequest.request('EUW', '/cacheable', false, function(err, res) {
-          if(err) {
-            return cb(err);
-          }
+      var requiredCacheStrategy = 150;
+      var riotRequest = new RiotRequest("fake", null, {
+        get: function(region, endpoint, cacheStrategy, cb) {
+          cb(null, null);
+        },
+        set: function(region, endpoint, cacheStrategy, data) {
+          assert.deepEqual(data, defaultPayload);
+          assert.equal(requiredCacheStrategy, cacheStrategy);
+          process.nextTick(done);
+        }
+      });
 
-          assert.equal(res.ok, 'second time');
-          cb();
-        });
-      }
-    ], done);
+      riotRequest.request('EUW', '/cacheable', requiredCacheStrategy, function(err) {
+        assert.ifError(err);
+      });
+    });
+
+    it("should not call the setter function when reading from cache", function(done) {
+
+      var requiredCacheStrategy = 150;
+      var riotRequest = new RiotRequest("fake", null, {
+        get: function(region, endpoint, cacheStrategy, cb) {
+          cb(null, {cache: true});
+        },
+        set: function(region, endpoint, cacheStrategy, data) {
+          // jshint unused:false
+          throw new Error("Should not be called");
+        }
+      });
+
+      riotRequest.request('EUW', '/cacheable', requiredCacheStrategy, function(err, data) {
+        assert.ifError(err);
+        assert.deepEqual(data, {cache: true});
+
+        done();
+      });
+    });
   });
 });

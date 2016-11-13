@@ -4,7 +4,7 @@
   "description": "Small helper to handle Riot API rate limiting and server errors",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha --recursive -t 5000 test/ --reporter ${MOCHA_REPORTER:-spec}",
+    "test": "NODE_ENV=test mocha --recursive -t 500 test/ --reporter ${MOCHA_REPORTER:-spec}",
     "lint": "jshint app.js bin/ lib/ test/ config/",
     "style": "jscs ."
   },

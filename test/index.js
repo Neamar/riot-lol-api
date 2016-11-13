@@ -4,16 +4,18 @@ var assert = require("assert");
 var nock = require("nock");
 var async = require("async");
 
-var request = require('../lib/index.js');
+var RiotRequest = require('../lib/index.js');
 
 describe("Riot queue requester", function() {
+  var riotRequest = new RiotRequest("fake_key", [100, 100]);
+
   it("should return results on valid reply from Riot's server", function(done) {
     nock('https://euw.api.pvp.net')
       .get('/fake')
       .query(true)
       .reply({}, {ok: true});
 
-    request('EUW', '/fake', false, function(err, res) {
+    riotRequest.request('EUW', '/fake', false, function(err, res) {
       if(err) {
         return done(err);
       }
@@ -34,7 +36,7 @@ describe("Riot queue requester", function() {
       .query(true)
       .reply(200, {ok: true});
 
-    request('EUW', '/fake', false, function(err, res) {
+    riotRequest.request('EUW', '/fake', false, function(err, res) {
       if(err) {
         return done(err);
       }
@@ -55,7 +57,7 @@ describe("Riot queue requester", function() {
       .query(true)
       .reply(500, {ok: true});
 
-    request('EUW', '/fake', false, function(err) {
+    riotRequest.request('EUW', '/fake', false, function(err) {
       if(!err) {
         return done(new Error("Expected an error to occur."));
       }
@@ -76,7 +78,7 @@ describe("Riot queue requester", function() {
       .query(true)
       .reply(200, {ok: true});
 
-    request('EUW', '/fake', false, function(err, res) {
+    riotRequest.request('EUW', '/fake', false, function(err, res) {
       if(err) {
         return done(err);
       }
@@ -100,7 +102,7 @@ describe("Riot queue requester", function() {
     async.waterfall([
       function(cb) {
         // Should fetch resource the first time
-        request('EUW', '/cacheable', true, function(err, res) {
+        riotRequest.request('EUW', '/cacheable', true, function(err, res) {
           if(err) {
             return cb(err);
           }
@@ -111,7 +113,7 @@ describe("Riot queue requester", function() {
       },
       function(cb) {
         // Should reuse cached value and not call the second nock request
-        request('EUW', '/cacheable', true, function(err, res) {
+        riotRequest.request('EUW', '/cacheable', true, function(err, res) {
           if(err) {
             return cb(err);
           }
@@ -122,7 +124,7 @@ describe("Riot queue requester", function() {
       },
       function(cb) {
         // Witch cacheable=false however, should do a new call
-        request('EUW', '/cacheable', false, function(err, res) {
+        riotRequest.request('EUW', '/cacheable', false, function(err, res) {
           if(err) {
             return cb(err);
           }

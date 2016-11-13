@@ -1,0 +1,19 @@
+{
+  "name": "riot-lol-api",
+  "version": "1.0.0",
+  "description": "Small helper to handle Riot API rate limiting and server errors",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Neamar/riot-lol-api.git"
+  },
+  "author": "Neamar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Neamar/riot-lol-api/issues"
+  },
+  "homepage": "https://github.com/Neamar/riot-lol-api#readme"
+}

@@ -1,0 +1,38 @@
+{
+    "fileExtensions": [ ".js", "jscs"],
+    "disallowSpaceAfterKeywords": ["if", "for"],
+    "disallowSpacesInNamedFunctionExpression": {
+      "beforeOpeningRoundBrace": true
+    },
+    "disallowSpacesInFunctionExpression": {
+        "beforeOpeningRoundBrace": true
+    },
+    "disallowSpacesInsideObjectBrackets": "all",
+    "disallowSpacesInsideParentheses": true,
+    "disallowSpaceAfterObjectKeys": true,
+    "disallowMultipleVarDecl": true,
+    "disallowTrailingWhitespace": true,
+    "disallowSpacesInCallExpression": true,
+    "disallowYodaConditions": true,
+    "disallowNewlineBeforeBlockStatements": true,
+    "disallowKeywords": ["with"],
+
+    "requireSpaceAfterLineComment": true,
+    "requireSpaceBeforeObjectValues": true,
+    "requireSpaceBeforeBinaryOperators": true,
+    "requireSpaceAfterBinaryOperators": true,
+    "requireCommaBeforeLineBreak": true,
+    "requireCamelCaseOrUpperCaseIdentifiers": "ignoreProperties",
+    "requireSpaceBeforeBlockStatements": true,
+    "requireSpacesInConditionalExpression": true,
+    "requireBlocksOnNewline": true,
+    "requireKeywordsOnNewLine": ["else"],
+    "requireLineFeedAtFileEnd": true,
+    "requireDotNotation": true,
+
+    "validateLineBreaks": "LF",
+    "validateParameterSeparator": ", ",
+    "validateIndentation": 2,
+
+    "safeContextKeyword": ["self"]
+}

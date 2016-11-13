@@ -2,7 +2,6 @@
 
 var assert = require("assert");
 var nock = require("nock");
-var async = require("async");
 
 var RiotRequest = require('../lib/index.js');
 

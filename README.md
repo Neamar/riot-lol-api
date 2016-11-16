@@ -62,3 +62,6 @@ You may want to use a package like `lru-cache` to help you with caching -- not t
 You'll notice that the `set()` function has no callback, this is intentional. You can start async operations from here, but the system won't wait for your operation to complete before moving on to other requests.
 
 In some situations, the `get()` function might be called more than once per endpoint. For performance, when a request is queued, it is checked instantly if it's in cache: if it isn't, it's added in a queue, and when the worker start that task he will ask the cache again in case the same request was already queued and has since then been cached.
+
+## Logging
+The library use `debug` for logging. To see logs, set this environment variable: `DEBUG=riot-lol-api:*`.

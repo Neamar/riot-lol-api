@@ -38,7 +38,6 @@ var cache = {
     // Try to read from cache,
     // Return cb(null, data) if data is already available in your cache.
     // If it's a cache-miss, you still need to call cb(null, null) for the request to proceed.
-    // Note this function might be called more than once per endpoint (if the time spent in queue is too long)
     cb(null, null);
   },
   set: function(region, endpoint, cacheStrategy, data) {
@@ -46,3 +45,5 @@ var cache = {
   }
 };
 ```
+
+In some situations, the `get` function might be called more than once per endpoint. For performance, when a request is queued, it is checked instantly if it's in cache: if it isn't, it's added in a queue, and when the worker start that task he will ask the cache again in case the same request was already queued and has since then been cached.

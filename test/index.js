@@ -127,8 +127,8 @@ describe("Riot queue", function() {
   describe("Requester with cache", function() {
     it("should let user specify its own cache function", function(done) {
       var riotRequest = new RiotRequest("fake", null, {
-        get: function(region, endpoint, cacheStrategy, cb) {
-          cb(null, cacheStrategy);
+        get: function(region, endpoint, cb) {
+          cb(null, "cached_value");
         },
         set: function(region, endpoint, cacheStrategy, data) {
           // jshint unused:false
@@ -136,10 +136,9 @@ describe("Riot queue", function() {
         }
       });
 
-      var cacheStrategy = 150;
-      riotRequest.request('EUW', '/cacheable', cacheStrategy, function(err, data) {
+      riotRequest.request('EUW', '/cacheable', 150, function(err, data) {
         assert.ifError(err);
-        assert.equal(data, cacheStrategy);
+        assert.equal(data, "cached_value");
 
         done();
       });
@@ -154,7 +153,7 @@ describe("Riot queue", function() {
 
       var requiredCacheStrategy = 150;
       var riotRequest = new RiotRequest("fake", null, {
-        get: function(region, endpoint, cacheStrategy, cb) {
+        get: function(region, endpoint, cb) {
           cb(null, null);
         },
         set: function(region, endpoint, cacheStrategy, data) {
@@ -170,10 +169,9 @@ describe("Riot queue", function() {
     });
 
     it("should not call the setter function when reading from cache", function(done) {
-
       var requiredCacheStrategy = 150;
       var riotRequest = new RiotRequest("fake", null, {
-        get: function(region, endpoint, cacheStrategy, cb) {
+        get: function(region, endpoint, cb) {
           cb(null, {cache: true});
         },
         set: function(region, endpoint, cacheStrategy, data) {
@@ -185,6 +183,32 @@ describe("Riot queue", function() {
       riotRequest.request('EUW', '/cacheable', requiredCacheStrategy, function(err, data) {
         assert.ifError(err);
         assert.deepEqual(data, {cache: true});
+
+        done();
+      });
+    });
+
+
+    it("should not call the getter function when cache is disabled", function(done) {
+      nock('https://euw.api.pvp.net')
+        .get('/cacheable')
+        .query(true)
+        .reply(200, {ok: true});
+
+      var riotRequest = new RiotRequest("fake", null, {
+        get: function(region, endpoint, cb) {
+          // jshint unused:false
+          throw new Error("get() should not be called!");
+        },
+        set: function(region, endpoint, cacheStrategy, data) {
+          // jshint unused:false
+          throw new Error("set() should not be called!");
+        }
+      });
+
+      riotRequest.request('EUW', '/cacheable', false, function(err, data) {
+        assert.ifError(err);
+        assert.deepEqual(data, {ok: true});
 
         done();
       });

@@ -1,6 +1,7 @@
 "use strict";
 
 var assert = require("assert");
+var async = require("async");
 var nock = require("nock");
 
 var RiotRequest = require('../lib/index.js');
@@ -121,6 +122,100 @@ describe("Riot queue", function() {
         assert.equal(res.ok, true);
         done();
       });
+    });
+
+    it("should honor rate limits", function(done) {
+      // Only one concurrent request at a time
+      var riotRequest = new RiotRequest("fake_key", [1, 1]);
+
+      nock('https://euw.api.pvp.net')
+        .get('/fake')
+        .query(true)
+        .reply(200, {ok: "part1"});
+
+      // Second call will return a 500
+      nock('https://euw.api.pvp.net')
+        .get('/fake')
+        .query(true)
+        .reply(404, {ok: false});
+
+      async.parallel([
+        function firstCall(cb) {
+          riotRequest.request('EUW', '/fake', false, function(err, res) {
+            if(err) {
+              return cb(err);
+            }
+
+            assert.equal(res.ok, "part1");
+
+            // Ensure the second calls works
+            nock.cleanAll();
+            nock('https://euw.api.pvp.net')
+              .get('/fake')
+              .query(true)
+              .reply(200, {ok: "part2"});
+
+            cb();
+          });
+        },
+        function secondCall(cb) {
+          riotRequest.request('EUW', '/fake', false, function(err, res) {
+            if(err) {
+              return cb(err);
+            }
+
+            assert.equal(res.ok, "part2");
+            cb();
+          });
+        }
+      ], done);
+    });
+
+    it("should allow for multiple calls in parallel", function(done) {
+      // Up to 5 concurrent requests at a time
+      var riotRequest = new RiotRequest("fake_key", [5, 5]);
+
+      nock('https://euw.api.pvp.net')
+        .get('/fake')
+        .query(true)
+        .reply(200, {ok: "part1"});
+
+      // Second call will return a 500
+      nock('https://euw.api.pvp.net')
+        .get('/fake')
+        .query(true)
+        .reply(200, {ok: "part2"});
+
+      async.parallel([
+        function firstCall(cb) {
+          riotRequest.request('EUW', '/fake', false, function(err, res) {
+            if(err) {
+              return cb(err);
+            }
+
+            assert.equal(res.ok, "part1");
+
+            // Ensure the second calls fails it it hasn't already suceeded
+            nock.cleanAll();
+            nock('https://euw.api.pvp.net')
+              .get('/fake')
+              .query(true)
+              .reply(404, {ok: false});
+
+            cb();
+          });
+        },
+        function secondCall(cb) {
+          riotRequest.request('EUW', '/fake', false, function(err, res) {
+            if(err) {
+              return cb(err);
+            }
+
+            assert.equal(res.ok, "part2");
+            cb();
+          });
+        }
+      ], done);
     });
   });
 

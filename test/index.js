@@ -99,6 +99,8 @@ describe("Riot queue", function() {
         }
 
         assert.equal(err.statusCode, 500);
+        assert.equal(err.riotInternal, true);
+        assert.equal(err.extra.endpoint, '/fake');
         done();
       });
     });

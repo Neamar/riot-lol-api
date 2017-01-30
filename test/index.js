@@ -285,7 +285,6 @@ describe("Riot queue", function() {
       });
     });
 
-
     it("should not call the getter function when cache is disabled", function(done) {
       nock('https://euw.api.pvp.net')
         .get('/cacheable')
@@ -309,6 +308,47 @@ describe("Riot queue", function() {
 
         done();
       });
+    });
+
+    it("should use the pre-cache when throttled", function(done) {
+      // This is delayed to ensure the queue is throttled
+      nock('https://euw.api.pvp.net')
+        .get('/pending')
+        .query(true)
+        .delayBody(1000)
+        .reply(200, {ok: true});
+
+      nock('https://euw.api.pvp.net')
+        .get('/cacheable')
+        .query(true)
+        .reply(200, {ok: true});
+
+      var riotRequest = new RiotRequest("fake", [1, 1], {
+        get: function(region, endpoint, cb) {
+          // jshint unused:false
+          if(endpoint === "/cacheable") {
+            return cb(null, {cache: true});
+          }
+          throw new Error("get() should not be called for " + endpoint);
+        },
+        set: function(region, endpoint, cacheStrategy, data) {
+          // jshint unused:false
+          throw new Error("set() should not be called!");
+        }
+      });
+
+      // Throttle the queue
+      riotRequest.request('EUW', '/pending', false, function() {});
+
+      setTimeout(function() {
+        // And then ensure pre-cache works
+        riotRequest.request('EUW', '/cacheable', true, function(err, data) {
+          assert.ifError(err);
+          assert.deepEqual(data, {cache: true});
+
+          done();
+        });
+      }, 10);
     });
   });
 });

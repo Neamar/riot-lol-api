@@ -351,4 +351,23 @@ describe("Riot queue", function() {
       }, 10);
     });
   });
+
+  describe("Regions", function() {
+    it("should be exposed on riotRequest", function() {
+      var riotRequest = new RiotRequest("fake");
+      assert.ok(riotRequest.REGIONS.indexOf('euw') !== -1);
+    });
+  });
+
+  describe("Platforms", function() {
+    it("should be available on riotRequest", function() {
+      var riotRequest = new RiotRequest("fake");
+      assert.ok(riotRequest.getPlatformFromRegion('euw'), 'EUW1');
+    });
+
+    it("should be available on riotRequest with any casing", function() {
+      var riotRequest = new RiotRequest("fake");
+      assert.ok(riotRequest.getPlatformFromRegion('EUW'), 'EUW1');
+    });
+  });
 });

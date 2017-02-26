@@ -1,4 +1,4 @@
-# RiotRequester
+# Riot Lol API
 
 This module lets you query the Riot API for LeagueOfLegends data.
 
@@ -25,12 +25,13 @@ riotRequest.request('euw', '/api/lol/EUW1/v1.4/summoner/by-name/graphistos', fun
 
 The library will take care of rate limiting and automatically retry on 500 and 503.
 
-It will also maintain a very high request concurrency, while still ensuring that you always get at most one "429 Rate Limited" response.
+It will also maintain a very high request concurrency, dynamically updating concurrency to ensure you remain a good citizen and don't get blacklisted.
 
 Ensure that your network adapter can deal with the traffic!
+If necessary, you can distribute the library across multiple servers -- I'm currently using it with a production key distributed on 4 servers sending > 35 millions calls a day.
 
 ## Caching
-The third argument in the constructor let you define a cache object. This object should expose two keys, `get` and `set`. The default implementation does no caching:
+The third argument in the constructor lets you define a cache object. This object should expose two keys, `get` and `set`. The default implementation does no caching:
 
 ```js
 var cache = {
@@ -74,6 +75,8 @@ HTTP errrors on the Riot API side will expose three properties:
 * `.statusCode` containing the return code from the API (the most common one is 503. Note that the library is retrying by default all 5XX errors, so if you see it in your code it means that the error happened twice)
 * `riotInternal` a flag set to true to help you distinguish network errors (fairly common) from more standard errors (e.g. from your cache)
 * `extra`, an object exposing details about the request: endpoint, region, status code, whether the failure is due to a timeout... You may want to send this object directly to you error monitoring system.
+
+Please remember that the library will automatically retry once when it receives a 500 and 503.
 
 ## Dealing with regions and platforms
 For convenience, the library exposes a function `getPlatformFromRegion()` that takes a region as parameter (e.g "euw") and returns the associaed platform to use with the Riot API ("EUW1"). This can be useful for building URLs.

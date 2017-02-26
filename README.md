@@ -57,7 +57,7 @@ riotRequest.request('euw', '/api/lol/EUW1/v1.4/summoner/by-name/graphistos', YOU
 When unspecified, cacheStrategy will default to `false`, and your cache won't be used.
 If the value is not falsy, the cache will be used and the value will be forwarded to you. The most common use case would be to send how long you want to store the data in cache, but this is completely up to you.
 
-You may want to use a package like `lru-cache` to help you with caching -- not that you can plug any system you want (Redis, Riak, file system), just ensure you call `cb(null, data)`. If you send an error in the first argument, the library will forward this error directly to the callback specified in `.request()`.
+You may want to use a package like `lru-cache` to help you with caching -- note that you can plug any system you want (Redis, Riak, file system), just ensure you call `cb(null, data)`. If you send an error in the first argument, the library will forward this error directly to the callback specified in `.request()`.
 
 You'll notice that the `set()` function has no callback, this is intentional. You can start async operations from here, but the system won't wait for your operation to complete before moving on to other requests.
 

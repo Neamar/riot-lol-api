@@ -20,7 +20,7 @@ var rateLimits = null; // Don't pass anything to use development rate limits, ot
 
 var riotRequest = new RiotRequest('my_api_key', rateLimits);
 
-riotRequest.request('euw', '/api/lol/EUW1/v1.4/summoner/by-name/graphistos', function(err, data) {});
+riotRequest.request('euw', '/api/lol/euw/v1.4/summoner/by-name/graphistos', function(err, data) {});
 ```
 
 The library will take care of rate limiting and automatically retry on 500 and 503.

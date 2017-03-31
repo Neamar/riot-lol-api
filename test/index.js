@@ -46,7 +46,7 @@ describe("Riot queue", function() {
     var riotRequest = new RiotRequest("fake_key", [100, 100]);
 
     it("should return results on valid reply from Riot's server", function(done) {
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply({}, {ok: true});
@@ -62,12 +62,12 @@ describe("Riot queue", function() {
     });
 
     it("should retry automatically after a 500", function(done) {
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(500, {ok: false});
 
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(200, {ok: true});
@@ -83,12 +83,12 @@ describe("Riot queue", function() {
     });
 
     it("should fail after a second 500", function(done) {
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(500, {ok: false});
 
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(500, {ok: true});
@@ -106,12 +106,12 @@ describe("Riot queue", function() {
     });
 
     it("should retry automatically after a 429", function(done) {
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(429, {ok: false}, {'retry-after': '0.01'});
 
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(200, {ok: true});
@@ -130,13 +130,13 @@ describe("Riot queue", function() {
       // Only one concurrent request at a time
       var riotRequest = new RiotRequest("fake_key", [1, 1]);
 
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(200, {ok: "part1"});
 
       // Second call will return a 500
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(404, {ok: false});
@@ -152,7 +152,7 @@ describe("Riot queue", function() {
 
             // Ensure the second calls works
             nock.cleanAll();
-            nock('https://euw.api.pvp.net')
+            nock('https://euw.api.riotgames.com')
               .get('/fake')
               .query(true)
               .reply(200, {ok: "part2"});
@@ -177,13 +177,13 @@ describe("Riot queue", function() {
       // Up to 5 concurrent requests at a time
       var riotRequest = new RiotRequest("fake_key", [5, 5]);
 
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(200, {ok: "part1"});
 
       // Second call will return a 500
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(200, {ok: "part2"});
@@ -199,7 +199,7 @@ describe("Riot queue", function() {
 
             // Ensure the second calls fails it it hasn't already suceeded
             nock.cleanAll();
-            nock('https://euw.api.pvp.net')
+            nock('https://euw.api.riotgames.com')
               .get('/fake')
               .query(true)
               .reply(404, {ok: false});
@@ -243,7 +243,7 @@ describe("Riot queue", function() {
 
     it("should call the setter function on the cache object", function(done) {
       var defaultPayload = {ok: true};
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/cacheable')
         .query(true)
         .reply({}, defaultPayload);
@@ -286,7 +286,7 @@ describe("Riot queue", function() {
     });
 
     it("should not call the getter function when cache is disabled", function(done) {
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/cacheable')
         .query(true)
         .reply(200, {ok: true});
@@ -312,13 +312,13 @@ describe("Riot queue", function() {
 
     it("should use the pre-cache when throttled", function(done) {
       // This is delayed to ensure the queue is throttled
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/pending')
         .query(true)
         .delayBody(1000)
         .reply(200, {ok: true});
 
-      nock('https://euw.api.pvp.net')
+      nock('https://euw.api.riotgames.com')
         .get('/cacheable')
         .query(true)
         .reply(200, {ok: true});

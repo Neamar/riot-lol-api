@@ -6,8 +6,8 @@ machine:
     # This remove network conenctivity to the domains used for communicating with the API
     # Also note that the test environment doesn't have a valid API key in environment
     ddragon.leagueoflegends.com: 127.0.0.1
-    euw.api.pvp.net: 127.0.0.1
-    na.api.pvp.net: 127.0.0.1
+    euw.api.riotgames.com: 127.0.0.1
+    na.api.riotgames.com: 127.0.0.1
 test:
   pre:
     - npm run-script lint

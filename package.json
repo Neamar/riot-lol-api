@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Neamar/riot-lol-api#readme",
   "dependencies": {
+    "agentkeepalive": "^3.2.0",
     "async": "^2.1.2",
     "debug": "^2.6.0",
     "rarity": "^2.1.1",

@@ -21,7 +21,7 @@
   "dependencies": {
     "agentkeepalive": "^3.2.0",
     "async": "^2.1.2",
-    "debug": "^2.6.0",
+    "debug": "^3.0.0",
     "rarity": "^2.1.1",
     "request": "^2.73.0",
     "superagent": "^3.3.1"

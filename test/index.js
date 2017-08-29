@@ -102,71 +102,118 @@ describe("Riot queue", function() {
       });
     });
 
-    it.skip("should honor rate limits", function(done) {
-      // Only one concurrent request at a time
-      var riotRequest = new RiotRequest("fake_key", [1, 1]);
+    describe("Rate limiting", function() {
+      it("should honor rate limits", function(done) {
+        // Only one concurrent request at a time
+        var riotRequest = new RiotRequest("fake_key");
 
-      nock('https://euw.api.riotgames.com')
-        .get('/fake')
-        .query(true)
-        .reply(200, {ok: "part1"});
-
-      // Second call will return a 500
-      nock('https://euw.api.riotgames.com')
-        .get('/fake')
-        .query(true)
-        .reply(404, {ok: false});
-
-      async.parallel([
-        function firstCall(cb) {
-          riotRequest.request('EUW', '/fake', false, function(err, res) {
-            if(err) {
-              return cb(err);
-            }
-
-            assert.equal(res.ok, "part1");
-
-            // Ensure the second calls works
-            nock.cleanAll();
-            nock('https://euw.api.riotgames.com')
-              .get('/fake')
-              .query(true)
-              .reply(200, {ok: "part2"});
-
-            cb();
+        nock('https://euw.api.riotgames.com')
+          .get('/fake')
+          .query(true)
+          .reply(200, {ok: "bar"}, {
+            'x-app-rate-limit-count': '1:1',
+            'x-app-rate-limit': '1:1',
+            'x-method-rate-limit-count': '1:1',
+            'x-method-rate-limit': '1:1'
           });
-        },
-        function secondCall(cb) {
-          riotRequest.request('EUW', '/fake', false, function(err, res) {
-            if(err) {
-              return cb(err);
-            }
 
-            assert.equal(res.ok, "part2");
-            cb();
+        riotRequest.request('EUW', 'test', '/fake', false, function(err, res) {
+          assert.ifError(err);
+
+          assert.equal(res.ok, "bar");
+
+          assert.equal(riotRequest.requestQueues.euwtest.concurrency, 1);
+          done();
+        });
+      });
+
+      it("should honor app rate limits", function(done) {
+        // Only one concurrent request at a time
+        var riotRequest = new RiotRequest("fake_key");
+
+        nock('https://euw.api.riotgames.com')
+          .get('/fake')
+          .query(true)
+          .reply(200, {ok: "bar"}, {
+            'x-app-rate-limit-count': '3:1',
+            'x-app-rate-limit': '10:1',
+            'x-method-rate-limit-count': '1:1',
+            'x-method-rate-limit': '100:1'
           });
-        }
-      ], done);
+
+        riotRequest.request('EUW', 'test', '/fake', false, function(err) {
+          assert.ifError(err);
+
+          // 10 - 3
+          assert.equal(riotRequest.requestQueues.euwtest.concurrency, 7);
+          done();
+        });
+      });
+
+      it("should honor method rate limits", function(done) {
+        // Only one concurrent request at a time
+        var riotRequest = new RiotRequest("fake_key");
+
+        nock('https://euw.api.riotgames.com')
+          .get('/fake')
+          .query(true)
+          .reply(200, {ok: "bar"}, {
+            'x-app-rate-limit-count': '1:1',
+            'x-app-rate-limit': '100:1',
+            'x-method-rate-limit-count': '5:1',
+            'x-method-rate-limit': '30:1'
+          });
+
+        riotRequest.request('EUW', 'test', '/fake', false, function(err) {
+          assert.ifError(err);
+
+          // 30 - 5
+          assert.equal(riotRequest.requestQueues.euwtest.concurrency, 25);
+          done();
+        });
+      });
+
+      it("should honor secondary rate limits", function(done) {
+        // Only one concurrent request at a time
+        var riotRequest = new RiotRequest("fake_key");
+
+        nock('https://euw.api.riotgames.com')
+          .get('/fake')
+          .query(true)
+          .reply(200, {ok: "bar"}, {
+            'x-app-rate-limit-count': '1:10,1:600',
+            'x-app-rate-limit': '1000:10,420000:600',
+            'x-method-rate-limit-count': '1:10,1000:600',
+            'x-method-rate-limit': '1000:10,1200:600'
+          });
+
+        riotRequest.request('EUW', 'test', '/fake', false, function(err) {
+          assert.ifError(err);
+
+          // 1200 - 1000
+          assert.equal(riotRequest.requestQueues.euwtest.concurrency, 200);
+          done();
+        });
+      });
     });
 
-    it.skip("should allow for multiple calls in parallel", function(done) {
-      // Up to 5 concurrent requests at a time
-      var riotRequest = new RiotRequest("fake_key", [5, 5]);
+    it("should allow for multiple calls in parallel", function(done) {
+      var riotRequest = new RiotRequest("fake_key");
 
       nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(200, {ok: "part1"});
 
-      // Second call will return a 500
       nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(200, {ok: "part2"});
 
+      // Run in parallel
       async.parallel([
         function firstCall(cb) {
-          riotRequest.request('EUW', '/fake', false, function(err, res) {
+          riotRequest.request('EUW', 'test', '/fake', false, function(err, res) {
             if(err) {
               return cb(err);
             }
@@ -184,7 +231,7 @@ describe("Riot queue", function() {
           });
         },
         function secondCall(cb) {
-          riotRequest.request('EUW', '/fake', false, function(err, res) {
+          riotRequest.request('EUW', 'test', '/fake', false, function(err, res) {
             if(err) {
               return cb(err);
             }
@@ -301,7 +348,6 @@ describe("Riot queue", function() {
 
       var riotRequest = new RiotRequest("fake", [1, 1], {
         get: function(region, endpoint, cb) {
-          // jshint unused:false
           if(endpoint === "/cacheable") {
             return cb(null, {cache: true});
           }

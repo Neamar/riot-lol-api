@@ -17,33 +17,18 @@ describe("Riot queue", function() {
         /missing riot api/i);
     });
 
-    it("should throw when passing invalid rate limit parameters", function() {
+    it("should throw when using invalid cache", function() {
       assert.throws(
         function() {
           /* jshint -W031 */
-          new RiotRequest("fake", "not an array");
+          new RiotRequest(123, [1]);
         },
-        /rate-limit must be an array/i);
-    });
-
-    it("should throw when passing invalid rate limit parameters", function() {
-      assert.throws(
-        function() {
-          /* jshint -W031 */
-          new RiotRequest("fake", [15]);
-        },
-        /rate-limit must be an array of length 2/i);
-    });
-
-    it("should default to development key when rate limit is unspecifed", function() {
-      var riotRequest = new RiotRequest("fake");
-      assert.equal(riotRequest.rateLimits[0], 10);
-      assert.equal(riotRequest.rateLimits[1], 500);
+        /invalid cache object/i);
     });
   });
 
   describe("Requester without cache", function() {
-    var riotRequest = new RiotRequest("fake_key", [100, 100]);
+    var riotRequest = new RiotRequest("fake_key");
 
     it("should return results on valid reply from Riot's server", function(done) {
       nock('https://euw.api.riotgames.com')
@@ -51,7 +36,7 @@ describe("Riot queue", function() {
         .query(true)
         .reply({}, {ok: true});
 
-      riotRequest.request('EUW', '/fake', false, function(err, res) {
+      riotRequest.request('EUW', 'test', '/fake', false, function(err, res) {
         if(err) {
           return done(err);
         }
@@ -72,7 +57,7 @@ describe("Riot queue", function() {
         .query(true)
         .reply(200, {ok: true});
 
-      riotRequest.request('EUW', '/fake', false, function(err, res) {
+      riotRequest.request('EUW', 'test', '/fake', false, function(err, res) {
         if(err) {
           return done(err);
         }
@@ -93,7 +78,7 @@ describe("Riot queue", function() {
         .query(true)
         .reply(500, {ok: true});
 
-      riotRequest.request('EUW', '/fake', false, function(err) {
+      riotRequest.request('EUW', 'test', '/fake', false, function(err) {
         if(!err) {
           return done(new Error("Expected an error to occur."));
         }
@@ -116,7 +101,7 @@ describe("Riot queue", function() {
         .query(true)
         .reply(200, {ok: true});
 
-      riotRequest.request('EUW', '/fake', false, function(err, res) {
+      riotRequest.request('EUW', 'test', '/fake', false, function(err, res) {
         if(err) {
           return done(err);
         }
@@ -126,71 +111,115 @@ describe("Riot queue", function() {
       });
     });
 
-    it("should honor rate limits", function(done) {
-      // Only one concurrent request at a time
-      var riotRequest = new RiotRequest("fake_key", [1, 1]);
+    describe("Rate limiting", function() {
+      it("should honor rate limits", function(done) {
+        // Only one concurrent request at a time
+        var riotRequest = new RiotRequest("fake_key");
 
-      nock('https://euw.api.riotgames.com')
-        .get('/fake')
-        .query(true)
-        .reply(200, {ok: "part1"});
-
-      // Second call will return a 500
-      nock('https://euw.api.riotgames.com')
-        .get('/fake')
-        .query(true)
-        .reply(404, {ok: false});
-
-      async.parallel([
-        function firstCall(cb) {
-          riotRequest.request('EUW', '/fake', false, function(err, res) {
-            if(err) {
-              return cb(err);
-            }
-
-            assert.equal(res.ok, "part1");
-
-            // Ensure the second calls works
-            nock.cleanAll();
-            nock('https://euw.api.riotgames.com')
-              .get('/fake')
-              .query(true)
-              .reply(200, {ok: "part2"});
-
-            cb();
+        nock('https://euw.api.riotgames.com')
+          .get('/fake')
+          .query(true)
+          .reply(200, {ok: "bar"}, {
+            'x-app-rate-limit-count': '1:1',
+            'x-app-rate-limit': '1:1',
+            'x-method-rate-limit-count': '1:1',
+            'x-method-rate-limit': '1:1'
           });
-        },
-        function secondCall(cb) {
-          riotRequest.request('EUW', '/fake', false, function(err, res) {
-            if(err) {
-              return cb(err);
-            }
 
-            assert.equal(res.ok, "part2");
-            cb();
+        riotRequest.request('EUW', 'test', '/fake', false, function(err, res) {
+          assert.ifError(err);
+
+          assert.equal(res.ok, "bar");
+
+          assert.equal(riotRequest.requestQueues.euwtest.concurrency, 1);
+          done();
+        });
+      });
+
+      it("should honor app rate limits", function(done) {
+        var riotRequest = new RiotRequest("fake_key");
+
+        nock('https://euw.api.riotgames.com')
+          .get('/fake')
+          .query(true)
+          .reply(200, {ok: "bar"}, {
+            'x-app-rate-limit-count': '3:1',
+            'x-app-rate-limit': '10:1',
+            'x-method-rate-limit-count': '1:1',
+            'x-method-rate-limit': '100:1'
           });
-        }
-      ], done);
+
+        riotRequest.request('EUW', 'test', '/fake', false, function(err) {
+          assert.ifError(err);
+
+          // 10 - 3
+          assert.equal(riotRequest.requestQueues.euwtest.concurrency, 7);
+          done();
+        });
+      });
+
+      it("should honor method rate limits", function(done) {
+        var riotRequest = new RiotRequest("fake_key");
+
+        nock('https://euw.api.riotgames.com')
+          .get('/fake')
+          .query(true)
+          .reply(200, {ok: "bar"}, {
+            'x-app-rate-limit-count': '1:1',
+            'x-app-rate-limit': '100:1',
+            'x-method-rate-limit-count': '5:1',
+            'x-method-rate-limit': '30:1'
+          });
+
+        riotRequest.request('EUW', 'test', '/fake', false, function(err) {
+          assert.ifError(err);
+
+          // 30 - 5
+          assert.equal(riotRequest.requestQueues.euwtest.concurrency, 25);
+          done();
+        });
+      });
+
+      it("should honor secondary rate limits", function(done) {
+        var riotRequest = new RiotRequest("fake_key");
+
+        nock('https://euw.api.riotgames.com')
+          .get('/fake')
+          .query(true)
+          .reply(200, {ok: "bar"}, {
+            'x-app-rate-limit-count': '1:10,1:600',
+            'x-app-rate-limit': '1000:10,420000:600',
+            'x-method-rate-limit-count': '1:10,1000:600',
+            'x-method-rate-limit': '1000:10,1200:600'
+          });
+
+        riotRequest.request('EUW', 'test', '/fake', false, function(err) {
+          assert.ifError(err);
+
+          // 1200 - 1000
+          assert.equal(riotRequest.requestQueues.euwtest.concurrency, 200);
+          done();
+        });
+      });
     });
 
     it("should allow for multiple calls in parallel", function(done) {
-      // Up to 5 concurrent requests at a time
-      var riotRequest = new RiotRequest("fake_key", [5, 5]);
+      var riotRequest = new RiotRequest("fake_key");
 
       nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(200, {ok: "part1"});
 
-      // Second call will return a 500
       nock('https://euw.api.riotgames.com')
         .get('/fake')
         .query(true)
         .reply(200, {ok: "part2"});
 
+      // Run in parallel
       async.parallel([
         function firstCall(cb) {
-          riotRequest.request('EUW', '/fake', false, function(err, res) {
+          riotRequest.request('EUW', 'test', '/fake', false, function(err, res) {
             if(err) {
               return cb(err);
             }
@@ -208,7 +237,7 @@ describe("Riot queue", function() {
           });
         },
         function secondCall(cb) {
-          riotRequest.request('EUW', '/fake', false, function(err, res) {
+          riotRequest.request('EUW', 'test', '/fake', false, function(err, res) {
             if(err) {
               return cb(err);
             }
@@ -223,7 +252,7 @@ describe("Riot queue", function() {
 
   describe("Requester with cache", function() {
     it("should let user specify its own cache function", function(done) {
-      var riotRequest = new RiotRequest("fake", null, {
+      var riotRequest = new RiotRequest("fake", {
         get: function(region, endpoint, cb) {
           cb(null, "cached_value");
         },
@@ -233,7 +262,7 @@ describe("Riot queue", function() {
         }
       });
 
-      riotRequest.request('EUW', '/cacheable', 150, function(err, data) {
+      riotRequest.request('EUW', 'test', '/cacheable', 150, function(err, data) {
         assert.ifError(err);
         assert.equal(data, "cached_value");
 
@@ -249,7 +278,7 @@ describe("Riot queue", function() {
         .reply({}, defaultPayload);
 
       var requiredCacheStrategy = 150;
-      var riotRequest = new RiotRequest("fake", null, {
+      var riotRequest = new RiotRequest("fake", {
         get: function(region, endpoint, cb) {
           cb(null, null);
         },
@@ -260,14 +289,14 @@ describe("Riot queue", function() {
         }
       });
 
-      riotRequest.request('EUW', '/cacheable', requiredCacheStrategy, function(err) {
+      riotRequest.request('EUW', 'test', '/cacheable', requiredCacheStrategy, function(err) {
         assert.ifError(err);
       });
     });
 
     it("should not call the setter function when reading from cache", function(done) {
       var requiredCacheStrategy = 150;
-      var riotRequest = new RiotRequest("fake", null, {
+      var riotRequest = new RiotRequest("fake", {
         get: function(region, endpoint, cb) {
           cb(null, {cache: true});
         },
@@ -277,7 +306,7 @@ describe("Riot queue", function() {
         }
       });
 
-      riotRequest.request('EUW', '/cacheable', requiredCacheStrategy, function(err, data) {
+      riotRequest.request('EUW', 'test', '/cacheable', requiredCacheStrategy, function(err, data) {
         assert.ifError(err);
         assert.deepEqual(data, {cache: true});
 
@@ -291,7 +320,7 @@ describe("Riot queue", function() {
         .query(true)
         .reply(200, {ok: true});
 
-      var riotRequest = new RiotRequest("fake", null, {
+      var riotRequest = new RiotRequest("fake", {
         get: function(region, endpoint, cb) {
           // jshint unused:false
           throw new Error("get() should not be called!");
@@ -302,7 +331,7 @@ describe("Riot queue", function() {
         }
       });
 
-      riotRequest.request('EUW', '/cacheable', false, function(err, data) {
+      riotRequest.request('EUW', 'test', '/cacheable', false, function(err, data) {
         assert.ifError(err);
         assert.deepEqual(data, {ok: true});
 
@@ -311,6 +340,17 @@ describe("Riot queue", function() {
     });
 
     it("should use the pre-cache when throttled", function(done) {
+      // Set rate limit to 1
+      nock('https://euw.api.riotgames.com')
+        .get('/throttle')
+        .query(true)
+        .reply(200, {ok: true}, {
+          'x-app-rate-limit-count': '1:1',
+          'x-app-rate-limit': '1:1',
+          'x-method-rate-limit-count': '1:1',
+          'x-method-rate-limit': '1:1'
+        });
+
       // This is delayed to ensure the queue is throttled
       nock('https://euw.api.riotgames.com')
         .get('/pending')
@@ -323,9 +363,8 @@ describe("Riot queue", function() {
         .query(true)
         .reply(200, {ok: true});
 
-      var riotRequest = new RiotRequest("fake", [1, 1], {
+      var riotRequest = new RiotRequest("fake", {
         get: function(region, endpoint, cb) {
-          // jshint unused:false
           if(endpoint === "/cacheable") {
             return cb(null, {cache: true});
           }
@@ -338,17 +377,21 @@ describe("Riot queue", function() {
       });
 
       // Throttle the queue
-      riotRequest.request('EUW', '/pending', false, function() {});
+      riotRequest.request('EUW', 'test', '/throttle', function() {
+        assert.equal(riotRequest.requestQueues.euwtest.concurrency, 1);
+        // This request will take one full second to complete, and since the concurrency is 1, the next request won't start.
+        riotRequest.request('EUW', 'test', '/pending', false, function() {});
 
-      setTimeout(function() {
-        // And then ensure pre-cache works
-        riotRequest.request('EUW', '/cacheable', true, function(err, data) {
-          assert.ifError(err);
-          assert.deepEqual(data, {cache: true});
+        setTimeout(function() {
+          // And then ensure pre-cache works
+          riotRequest.request('EUW', 'test', '/cacheable', true, function(err, data) {
+            assert.ifError(err);
+            assert.deepEqual(data, {cache: true});
 
-          done();
-        });
-      }, 10);
+            done();
+          });
+        }, 10);
+      });
     });
   });
 

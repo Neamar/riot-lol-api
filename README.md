@@ -16,11 +16,13 @@ npm install --save riot-lol-api
 ## Usage
 ```js
 var RiotRequest = require('riot-lol-api');
-var rateLimits = null; // Don't pass anything to use development rate limits, otherwise pass an array with both your rate-limits value, e.g. [3000, 180000] for a standard production key.
 
-var riotRequest = new RiotRequest('my_api_key', rateLimits);
+var riotRequest = new RiotRequest('my_api_key');
 
-riotRequest.request('euw', '/api/lol/euw/v1.4/summoner/by-name/graphistos', function(err, data) {});
+// 'summoner' is a string to identify the method being used currently
+// See note about rate-limiting in the README.
+// Also see https://developer.riotgames.com/rate-limiting.html#method-headers
+riotRequest.request('euw', 'summoner', '/api/lol/euw/v1.4/summoner/by-name/graphistos', function(err, data) {});
 ```
 
 The library will take care of rate limiting and automatically retry on 500 and 503.
@@ -31,7 +33,7 @@ Ensure that your network adapter can deal with the traffic!
 If necessary, you can distribute the library across multiple servers -- I'm currently using it with a production key distributed on 4 servers sending > 35 millions calls a day.
 
 ## Caching
-The third argument in the constructor lets you define a cache object. This object should expose two keys, `get` and `set`. The default implementation does no caching:
+The second argument in the constructor lets you define a cache object. This object should expose two keys, `get` and `set`. The default implementation does no caching:
 
 ```js
 var cache = {
@@ -52,17 +54,36 @@ var cache = {
 
 
 ```js
-riotRequest.request('euw', '/api/lol/EUW1/v1.4/summoner/by-name/graphistos', YOUR_CACHE_STRATEGY, function(err, data) {});
+riotRequest.request('euw', 'summoner', '/api/lol/EUW1/v1.4/summoner/by-name/graphistos', YOUR_CACHE_STRATEGY, function(err, data) {});
 ```
 
-When unspecified, cacheStrategy will default to `false`, and your cache won't be used.
-If the value is not falsy, the cache will be used and the value will be forwarded to you. The most common use case would be to send how long you want to store the data in cache, but this is completely up to you.
+When unspecified, `cacheStrategy` will default to `false`, and cache won't be used.
+If the value is not falsy, the cache will be used and the value will be forwarded to you (in your `.set` cache method). The most common use case would be to send how long you want to store the data in cache, but this is completely up to you.
 
 You may want to use a package like `lru-cache` to help you with caching -- note that you can plug any system you want (Redis, Riak, file system), just ensure you call `cb(null, data)`. If you send an error in the first argument, the library will forward this error directly to the callback specified in `.request()`.
 
 You'll notice that the `set()` function has no callback, this is intentional. You can start async operations from here, but the system won't wait for your operation to complete before moving on to other requests.
 
 In some situations, the `get()` function might be called more than once per endpoint. For performance, when a request is queued, it is checked instantly if it's in cache: if it isn't, it's added in a queue, and when the worker start that task he will ask the cache again in case the same request was already queued and has since then been cached.
+
+## Rate limiting
+The Riot API rate limiting is complex -- see https://developer.riotgames.com/rate-limiting.html for all the nitty gritty.
+
+This library abstracts most of it away, automatically reading the headers values and adjusting this behavior to ensure your key doesn't get blacklisted.
+
+However, when you call `.request`, you need to specifiy a string to identify the method currently being used.
+
+A list of all the buckets is available in https://developer.riotgames.com/rate-limiting.html#method-headers, but the TL;DR is that for every type of request you send, you should have some kind of tag: for instance, all requests for recent games can be tagged with "recent-games" (the second parameter to `.request(region, tag, endpoint)`. `riot-lol-api` will then ensure that all rate limits (both for the app and for the method) are respected per region.
+
+If the above paragraph didn't make any sense, go and check out the official Riot link above and then come back to this section ;)
+
+Here is a sample code excerpt: 
+
+```js
+riotRequest.request('euw', 'summoner', '/api/lol/EUW1/v1.4/summoner/by-name/graphistos', function(err, data) {});
+riotRequest.request('euw', 'champion-mastery', '/lol/champion-mastery/v3/champion-masteries/by-summoner/4203456', function(err, data) {});
+riotRequest.request('euw', 'league', '/lol/league/v3/positions/by-summoner/4203456', function(err, data) {});
+```
 
 ## Logging
 The library use `debug` for logging. To see logs, set this environment variable: `DEBUG=riot-lol-api:*`.

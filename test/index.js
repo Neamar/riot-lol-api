@@ -16,6 +16,15 @@ describe("Riot queue", function() {
         },
         /missing riot api/i);
     });
+
+    it("should throw when using invalid cache", function() {
+      assert.throws(
+        function() {
+          /* jshint -W031 */
+          new RiotRequest(123, [1]);
+        },
+        /invalid cache object/i);
+    });
   });
 
   describe("Requester without cache", function() {
@@ -128,7 +137,6 @@ describe("Riot queue", function() {
       });
 
       it("should honor app rate limits", function(done) {
-        // Only one concurrent request at a time
         var riotRequest = new RiotRequest("fake_key");
 
         nock('https://euw.api.riotgames.com')
@@ -151,7 +159,6 @@ describe("Riot queue", function() {
       });
 
       it("should honor method rate limits", function(done) {
-        // Only one concurrent request at a time
         var riotRequest = new RiotRequest("fake_key");
 
         nock('https://euw.api.riotgames.com')
@@ -174,7 +181,6 @@ describe("Riot queue", function() {
       });
 
       it("should honor secondary rate limits", function(done) {
-        // Only one concurrent request at a time
         var riotRequest = new RiotRequest("fake_key");
 
         nock('https://euw.api.riotgames.com')
@@ -333,7 +339,18 @@ describe("Riot queue", function() {
       });
     });
 
-    it.skip("should use the pre-cache when throttled", function(done) {
+    it("should use the pre-cache when throttled", function(done) {
+      // Set rate limit to 1
+      nock('https://euw.api.riotgames.com')
+        .get('/throttle')
+        .query(true)
+        .reply(200, {ok: true}, {
+          'x-app-rate-limit-count': '1:1',
+          'x-app-rate-limit': '1:1',
+          'x-method-rate-limit-count': '1:1',
+          'x-method-rate-limit': '1:1'
+        });
+
       // This is delayed to ensure the queue is throttled
       nock('https://euw.api.riotgames.com')
         .get('/pending')
@@ -346,7 +363,7 @@ describe("Riot queue", function() {
         .query(true)
         .reply(200, {ok: true});
 
-      var riotRequest = new RiotRequest("fake", [1, 1], {
+      var riotRequest = new RiotRequest("fake", {
         get: function(region, endpoint, cb) {
           if(endpoint === "/cacheable") {
             return cb(null, {cache: true});
@@ -360,17 +377,21 @@ describe("Riot queue", function() {
       });
 
       // Throttle the queue
-      riotRequest.request('EUW', '/pending', false, function() {});
+      riotRequest.request('EUW', 'test', '/throttle', function() {
+        assert.equal(riotRequest.requestQueues.euwtest.concurrency, 1);
+        // This request will take one full second to complete, and since the concurrency is 1, the next request won't start.
+        riotRequest.request('EUW', 'test', '/pending', false, function() {});
 
-      setTimeout(function() {
-        // And then ensure pre-cache works
-        riotRequest.request('EUW', '/cacheable', true, function(err, data) {
-          assert.ifError(err);
-          assert.deepEqual(data, {cache: true});
+        setTimeout(function() {
+          // And then ensure pre-cache works
+          riotRequest.request('EUW', 'test', '/cacheable', true, function(err, data) {
+            assert.ifError(err);
+            assert.deepEqual(data, {cache: true});
 
-          done();
-        });
-      }, 10);
+            done();
+          });
+        }, 10);
+      });
     });
   });
 

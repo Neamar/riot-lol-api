@@ -19,10 +19,10 @@ var RiotRequest = require('riot-lol-api');
 
 var riotRequest = new RiotRequest('my_api_key');
 
-// 'summoner/by-name' is a string to identify the method being used currently
+// 'summoner' is a string to identify the method being used currently
 // See note about rate-limiting in the README.
 // Also see https://developer.riotgames.com/rate-limiting.html#method-headers
-riotRequest.request('euw', 'summoner/by-name', '/api/lol/euw/v1.4/summoner/by-name/graphistos', function(err, data) {});
+riotRequest.request('euw', 'summoner', '/api/lol/euw/v1.4/summoner/by-name/graphistos', function(err, data) {});
 ```
 
 The library will take care of rate limiting and automatically retry on 500 and 503.
@@ -54,11 +54,11 @@ var cache = {
 
 
 ```js
-riotRequest.request('euw', 'summoner/by-name', '/api/lol/EUW1/v1.4/summoner/by-name/graphistos', YOUR_CACHE_STRATEGY, function(err, data) {});
+riotRequest.request('euw', 'summoner', '/api/lol/EUW1/v1.4/summoner/by-name/graphistos', YOUR_CACHE_STRATEGY, function(err, data) {});
 ```
 
 When unspecified, `cacheStrategy` will default to `false`, and cache won't be used.
-If the value is not falsy, the cache will be used and the value will be forwarded to you. The most common use case would be to send how long you want to store the data in cache, but this is completely up to you.
+If the value is not falsy, the cache will be used and the value will be forwarded to you (in your `.set` cache method). The most common use case would be to send how long you want to store the data in cache, but this is completely up to you.
 
 You may want to use a package like `lru-cache` to help you with caching -- note that you can plug any system you want (Redis, Riak, file system), just ensure you call `cb(null, data)`. If you send an error in the first argument, the library will forward this error directly to the callback specified in `.request()`.
 
@@ -76,6 +76,14 @@ However, when you call `.request`, you need to specifiy a string to identify the
 A list of all the buckets is available in https://developer.riotgames.com/rate-limiting.html#method-headers, but the TL;DR is that for every type of request you send, you should have some kind of tag: for instance, all requests for recent games can be tagged with "recent-games" (the second parameter to `.request(region, tag, endpoint)`. `riot-lol-api` will then ensure that all rate limits (both for the app and for the method) are respected per region.
 
 If the above paragraph didn't make any sense, go and check out the official Riot link above and then come back to this section ;)
+
+Here is a sample code excerpt: 
+
+```js
+riotRequest.request('euw', 'summoner', '/api/lol/EUW1/v1.4/summoner/by-name/graphistos', function(err, data) {});
+riotRequest.request('euw', 'champion-mastery', '/lol/champion-mastery/v3/champion-masteries/by-summoner/4203456', function(err, data) {});
+riotRequest.request('euw', 'league', '/lol/league/v3/positions/by-summoner/4203456', function(err, data) {});
+```
 
 ## Logging
 The library use `debug` for logging. To see logs, set this environment variable: `DEBUG=riot-lol-api:*`.

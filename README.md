@@ -22,7 +22,7 @@ var riotRequest = new RiotRequest('my_api_key');
 // 'summoner' is a string to identify the method being used currently
 // See note about rate-limiting in the README.
 // Also see https://developer.riotgames.com/rate-limiting.html#method-headers
-riotRequest.request('euw', 'summoner', '/api/lol/euw/v1.4/summoner/by-name/graphistos', function(err, data) {});
+riotRequest.request('euw1', 'summoner', '/lol/summoner/v3/summoners/by-name/graphistos', function(err, data) {});
 ```
 
 The library will take care of rate limiting and automatically retry on 500 and 503.
@@ -54,7 +54,7 @@ var cache = {
 
 
 ```js
-riotRequest.request('euw', 'summoner', '/api/lol/EUW1/v1.4/summoner/by-name/graphistos', YOUR_CACHE_STRATEGY, function(err, data) {});
+riotRequest.request('euw1', 'summoner', '/lol/summoner/v3/summoners/by-name/graphistos', YOUR_CACHE_STRATEGY, function(err, data) {});
 ```
 
 When unspecified, `cacheStrategy` will default to `false`, and cache won't be used.
@@ -80,9 +80,9 @@ If the above paragraph didn't make any sense, go and check out the official Riot
 Here is a sample code excerpt: 
 
 ```js
-riotRequest.request('euw', 'summoner', '/api/lol/EUW1/v1.4/summoner/by-name/graphistos', function(err, data) {});
-riotRequest.request('euw', 'champion-mastery', '/lol/champion-mastery/v3/champion-masteries/by-summoner/4203456', function(err, data) {});
-riotRequest.request('euw', 'league', '/lol/league/v3/positions/by-summoner/4203456', function(err, data) {});
+riotRequest.request('euw1', 'summoner', '/lol/summoner/v3/summoners/by-name/graphistos', function(err, data) {});
+riotRequest.request('euw1', 'champion-mastery', '/lol/champion-mastery/v3/champion-masteries/by-summoner/4203456', function(err, data) {});
+riotRequest.request('euw1', 'league', '/lol/league/v3/positions/by-summoner/4203456', function(err, data) {});
 ```
 
 ## Logging

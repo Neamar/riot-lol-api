@@ -103,3 +103,12 @@ Please remember that the library will automatically retry once when it receives 
 For convenience, the library exposes a function `getPlatformFromRegion()` that takes a region as parameter (e.g "euw") and returns the associaed platform to use with the Riot API ("EUW1"). This can be useful for building URLs.
 
 Additionally, there is also a `.REGIONS` property with an array of all valid Riot regions lowercased.
+
+## Advanced topics
+Honestly, skip this section if you're using the library for the first time. I started using this option past 20 million calls a day...
+
+### Throttler
+Use case: throttle some process to ensure other processes always have enough requests available. For example, let's say you have a worker downloading games in the background, and you also have a frontend that can request games from the API in realtime to answer user requests. You always want the frontend to be able to request in realtime, but by default it's very likely your worker will use all capacity every 10s.
+To prevent this, the library expose a function named `setThrottler(platform, method, throttle)` (and `setThrottler(method, throttle)` which is automatically applied to all platforms).
+
+For this particular use case, in your worker, you'd call `setThrottler('match', 100)` (replace `match` with the method name you use to qualify the request type when you call `.request()`). The library will then try to reserve 100 requests for other use (for instance, assuming you can do 250 calls per second, the worker will consume around 150 requests, leaving 100 requests for other processes). Exact count isn't guaranteed, but the closer you get to the specified limit, the smaller the concurrency will be (down to a minimum of 1).

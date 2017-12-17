@@ -108,7 +108,21 @@ Additionally, there is also a `.REGIONS` property with an array of all valid Rio
 Honestly, skip this section if you're using the library for the first time. I started using this option past 20 million calls a day...
 
 ### Throttler
-Use case: throttle some process to ensure other processes always have enough requests available. For example, let's say you have a worker downloading games in the background, and you also have a frontend that can request games from the API in realtime to answer user requests. You always want the frontend to be able to request in realtime, but by default it's very likely your worker will use all capacity every 10s.
+Use case:
+
+* throttle some process to ensure other processes always have enough requests available.
+ 
+Let's say you have a worker downloading games in the background, and you also have a frontend that can request games from the API in realtime to answer user requests. You always want the frontend to be able to request in realtime, but by default it's very likely your worker will use all capacity every 10s.
 To prevent this, the library expose a function named `setThrottler(platform, method, throttle)` (and `setThrottler(method, throttle)` which is automatically applied to all platforms).
 
-For this particular use case, in your worker, you'd call `setThrottler('match', 100)` (replace `match` with the method name you use to qualify the request type when you call `.request()`). The library will then try to reserve 100 requests for other use (for instance, assuming you can do 250 calls per second, the worker will consume around 150 requests, leaving 100 requests for other processes). Exact count isn't guaranteed, but the closer you get to the specified limit, the smaller the concurrency will be (down to a minimum of 1).
+For this particular use case, in your worker, you'd call `setThrottler('match', 100)` (replace `match` with the method name you use to qualify the request type when you call `.request()`). The library will then try to reserve 100 requests for uses in other processes (for instance, assuming you can do 250 calls per second, the worker will consume around 150 requests, leaving 100 requests for other processes). Exact count isn't guaranteed, but the closer you get to the specified throttled limit, the smaller the concurrency will be (down to a minimum of 1).
+
+### Access internal queue
+Use cases:
+
+* automatically fail a request when queue is rate limited, rather than fill the queue with time sensitive requests
+* hack around concurrency / tasks
+
+`riot-lol-api` uses `async.queue` internally. One queue is generated for each platform / method combination. Every time you call `.request()`, caching will be checked for you, and if the request has to be done it will be queued in the corresponding queue. Queue concurrency is then automatically changed on a per request basis (access with `queue.concurrency`. When a queue is rate-limited, `queue.rateLimited` will be set to true, you can use this flag to skip non important requests.
+
+To retrieve a specific queue, call `getQueue(platform, method)` on your `riotRequest` instance. If the queue does not exist, it will be created and reused for future requests on the same platform / method combination.

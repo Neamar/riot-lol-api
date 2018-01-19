@@ -29,7 +29,7 @@
   "devDependencies": {
     "jscs": "^3.0.7",
     "jshint": "^2.9.1",
-    "mocha": "^4.1.0",
+    "mocha": "^5.0.0",
     "mocha-junit-reporter": "^1.12.1",
     "nock": "^9.1.5",
     "sinon": "^4.0.0",

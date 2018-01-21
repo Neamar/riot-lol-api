@@ -1,5 +1,7 @@
 # Riot Lol API
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/Neamar/riot-lol-api.svg)](https://greenkeeper.io/)
+
 This module lets you query the Riot API for LeagueOfLegends data.
 
 You'll need a developer key from https://developer.riotgames.com.

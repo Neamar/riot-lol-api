@@ -113,9 +113,9 @@ Use case:
 * throttle some process to ensure other processes always have enough requests available.
  
 Let's say you have a worker downloading games in the background, and you also have a frontend that can request games from the API in realtime to answer user requests. You always want the frontend to be able to request in realtime, but by default it's very likely your worker will use all capacity every 10s.
-To prevent this, the library expose a function named `setThrottler(platform, method, throttle)` (and `setThrottler(method, throttle)` which is automatically applied to all platforms).
+To prevent this, the library exposes a method named `setThrottle(platform, method, throttle)` (and `setThrottle(method, throttle)` which is automatically applied to all platforms).
 
-For this particular use case, in your worker, you'd call `setThrottler('match', 100)` (replace `match` with the method name you use to qualify the request type when you call `.request()`). The library will then try to reserve 100 requests for uses in other processes (for instance, assuming you can do 250 calls per second, the worker will consume around 150 requests, leaving 100 requests for other processes). Exact count isn't guaranteed, but the closer you get to the specified throttled limit, the smaller the concurrency will be (down to a minimum of 1).
+For this particular use case, in your worker, you'd call `riotRequest.setThrottle('match', 100)` (replace `match` with the method name you use to qualify the request type when you call `.request()`). The library will then try to reserve 100 requests for uses in other processes (for instance, assuming you can do 250 calls per second, the worker will consume around 150 requests, leaving 100 requests for other processes). Exact count isn't guaranteed, but the closer you get to the specified throttled limit, the smaller the concurrency will be (down to a minimum of 1).
 
 ### Access internal queue
 Use cases:

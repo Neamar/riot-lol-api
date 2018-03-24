@@ -22,7 +22,6 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-              steps:
 
       # Every test should be fully mocked, or fail.
       # This remove network conenctivity to the domains used for communicating with the API

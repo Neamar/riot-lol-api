@@ -1,14 +1,14 @@
-"use strict";
+'use strict';
 
-var assert = require("assert");
-var async = require("async");
-var nock = require("nock");
+var assert = require('assert');
+var async = require('async');
+var nock = require('nock');
 
 var RiotRequest = require('../lib/index.js');
 
-describe("Riot queue", function() {
-  describe("Constructor", function() {
-    it("should throw when missing Riot api key", function() {
+describe('Riot queue', function() {
+  describe('Constructor', function() {
+    it('should throw when missing Riot api key', function() {
       assert.throws(
         function() {
           /* jshint -W031 */
@@ -17,7 +17,7 @@ describe("Riot queue", function() {
         /missing riot api/i);
     });
 
-    it("should throw when using invalid cache", function() {
+    it('should throw when using invalid cache', function() {
       assert.throws(
         function() {
           /* jshint -W031 */
@@ -27,8 +27,8 @@ describe("Riot queue", function() {
     });
   });
 
-  describe("Requester without cache", function() {
-    var riotRequest = new RiotRequest("fake_key");
+  describe('Requester without cache', function() {
+    var riotRequest = new RiotRequest('fake_key');
 
     it("should return results on valid reply from Riot's server", function(done) {
       nock('https://euw1.api.riotgames.com')
@@ -37,7 +37,7 @@ describe("Riot queue", function() {
         .reply({}, {ok: true});
 
       riotRequest.request('EUW1', 'test', '/fake', false, function(err, res) {
-        if(err) {
+        if (err) {
           return done(err);
         }
 
@@ -46,7 +46,7 @@ describe("Riot queue", function() {
       });
     });
 
-    it("should retry automatically after a 500", function(done) {
+    it('should retry automatically after a 500', function(done) {
       nock('https://euw1.api.riotgames.com')
         .get('/fake')
         .query(true)
@@ -58,7 +58,7 @@ describe("Riot queue", function() {
         .reply(200, {ok: true});
 
       riotRequest.request('EUW1', 'test', '/fake', false, function(err, res) {
-        if(err) {
+        if (err) {
           return done(err);
         }
 
@@ -67,7 +67,7 @@ describe("Riot queue", function() {
       });
     });
 
-    it("should fail after a second 500", function(done) {
+    it('should fail after a second 500', function(done) {
       nock('https://euw1.api.riotgames.com')
         .get('/fake')
         .query(true)
@@ -79,8 +79,8 @@ describe("Riot queue", function() {
         .reply(500, {ok: true});
 
       riotRequest.request('EUW1', 'test', '/fake', false, function(err) {
-        if(!err) {
-          return done(new Error("Expected an error to occur."));
+        if (!err) {
+          return done(new Error('Expected an error to occur.'));
         }
 
         assert.equal(err.statusCode, 500);
@@ -90,7 +90,7 @@ describe("Riot queue", function() {
       });
     });
 
-    it("should retry automatically after a 429", function(done) {
+    it('should retry automatically after a 429', function(done) {
       nock('https://euw1.api.riotgames.com')
         .get('/fake')
         .query(true)
@@ -102,7 +102,7 @@ describe("Riot queue", function() {
         .reply(200, {ok: true});
 
       riotRequest.request('EUW1', 'test', '/fake', false, function(err, res) {
-        if(err) {
+        if (err) {
           return done(err);
         }
 
@@ -111,15 +111,15 @@ describe("Riot queue", function() {
       });
     });
 
-    describe("Rate limiting", function() {
-      it("should honor rate limits", function(done) {
+    describe('Rate limiting', function() {
+      it('should honor rate limits', function(done) {
         // Only one concurrent request at a time
-        var riotRequest = new RiotRequest("fake_key");
+        var riotRequest = new RiotRequest('fake_key');
 
         nock('https://euw1.api.riotgames.com')
           .get('/fake')
           .query(true)
-          .reply(200, {ok: "bar"}, {
+          .reply(200, {ok: 'bar'}, {
             'x-app-rate-limit-count': '1:1',
             'x-app-rate-limit': '1:1',
             'x-method-rate-limit-count': '1:1',
@@ -129,20 +129,20 @@ describe("Riot queue", function() {
         riotRequest.request('EUW1', 'test', '/fake', false, function(err, res) {
           assert.ifError(err);
 
-          assert.equal(res.ok, "bar");
+          assert.equal(res.ok, 'bar');
 
           assert.equal(riotRequest.requestQueues.euw1test.concurrency, 1);
           done();
         });
       });
 
-      it("should honor app rate limits", function(done) {
-        var riotRequest = new RiotRequest("fake_key");
+      it('should honor app rate limits', function(done) {
+        var riotRequest = new RiotRequest('fake_key');
 
         nock('https://euw1.api.riotgames.com')
           .get('/fake')
           .query(true)
-          .reply(200, {ok: "bar"}, {
+          .reply(200, {ok: 'bar'}, {
             'x-app-rate-limit-count': '3:1',
             'x-app-rate-limit': '10:1',
             'x-method-rate-limit-count': '1:1',
@@ -158,13 +158,13 @@ describe("Riot queue", function() {
         });
       });
 
-      it("should honor method rate limits", function(done) {
-        var riotRequest = new RiotRequest("fake_key");
+      it('should honor method rate limits', function(done) {
+        var riotRequest = new RiotRequest('fake_key');
 
         nock('https://euw1.api.riotgames.com')
           .get('/fake')
           .query(true)
-          .reply(200, {ok: "bar"}, {
+          .reply(200, {ok: 'bar'}, {
             'x-app-rate-limit-count': '1:1',
             'x-app-rate-limit': '100:1',
             'x-method-rate-limit-count': '5:1',
@@ -180,13 +180,13 @@ describe("Riot queue", function() {
         });
       });
 
-      it("should honor secondary rate limits", function(done) {
-        var riotRequest = new RiotRequest("fake_key");
+      it('should honor secondary rate limits', function(done) {
+        var riotRequest = new RiotRequest('fake_key');
 
         nock('https://euw1.api.riotgames.com')
           .get('/fake')
           .query(true)
-          .reply(200, {ok: "bar"}, {
+          .reply(200, {ok: 'bar'}, {
             'x-app-rate-limit-count': '1:10,1:600',
             'x-app-rate-limit': '1000:10,420000:600',
             'x-method-rate-limit-count': '1:10,1000:600',
@@ -203,28 +203,28 @@ describe("Riot queue", function() {
       });
     });
 
-    it("should allow for multiple calls in parallel", function(done) {
-      var riotRequest = new RiotRequest("fake_key");
+    it('should allow for multiple calls in parallel', function(done) {
+      var riotRequest = new RiotRequest('fake_key');
 
       nock('https://euw1.api.riotgames.com')
         .get('/fake')
         .query(true)
-        .reply(200, {ok: "part1"});
+        .reply(200, {ok: 'part1'});
 
       nock('https://euw1.api.riotgames.com')
         .get('/fake')
         .query(true)
-        .reply(200, {ok: "part2"});
+        .reply(200, {ok: 'part2'});
 
       // Run in parallel
       async.parallel([
         function firstCall(cb) {
           riotRequest.request('EUW1', 'test', '/fake', false, function(err, res) {
-            if(err) {
+            if (err) {
               return cb(err);
             }
 
-            assert.equal(res.ok, "part1");
+            assert.equal(res.ok, 'part1');
 
             // Ensure the second calls fails it it hasn't already suceeded
             nock.cleanAll();
@@ -238,11 +238,11 @@ describe("Riot queue", function() {
         },
         function secondCall(cb) {
           riotRequest.request('EUW1', 'test', '/fake', false, function(err, res) {
-            if(err) {
+            if (err) {
               return cb(err);
             }
 
-            assert.equal(res.ok, "part2");
+            assert.equal(res.ok, 'part2');
             cb();
           });
         }
@@ -250,27 +250,26 @@ describe("Riot queue", function() {
     });
   });
 
-  describe("Requester with cache", function() {
-    it("should let user specify its own cache function", function(done) {
-      var riotRequest = new RiotRequest("fake", {
+  describe('Requester with cache', function() {
+    it('should let user specify its own cache function', function(done) {
+      var riotRequest = new RiotRequest('fake', {
         get: function(region, endpoint, cb) {
-          cb(null, "cached_value");
+          cb(null, 'cached_value');
         },
-        set: function(region, endpoint, cacheStrategy, data) {
-          // jshint unused:false
+        set: function(region, endpoint, cacheStrategy, data) { // eslint-disable-line no-unused-vars
           // Do nothing.
         }
       });
 
       riotRequest.request('EUW1', 'test', '/cacheable', 150, function(err, data) {
         assert.ifError(err);
-        assert.equal(data, "cached_value");
+        assert.equal(data, 'cached_value');
 
         done();
       });
     });
 
-    it("should call the setter function on the cache object", function(done) {
+    it('should call the setter function on the cache object', function(done) {
       var defaultPayload = {ok: true};
       nock('https://euw1.api.riotgames.com')
         .get('/cacheable')
@@ -278,7 +277,7 @@ describe("Riot queue", function() {
         .reply({}, defaultPayload);
 
       var requiredCacheStrategy = 150;
-      var riotRequest = new RiotRequest("fake", {
+      var riotRequest = new RiotRequest('fake', {
         get: function(region, endpoint, cb) {
           cb(null, null);
         },
@@ -294,15 +293,14 @@ describe("Riot queue", function() {
       });
     });
 
-    it("should not call the setter function when reading from cache", function(done) {
+    it('should not call the setter function when reading from cache', function(done) {
       var requiredCacheStrategy = 150;
-      var riotRequest = new RiotRequest("fake", {
+      var riotRequest = new RiotRequest('fake', {
         get: function(region, endpoint, cb) {
           cb(null, {cache: true});
         },
-        set: function(region, endpoint, cacheStrategy, data) {
-          // jshint unused:false
-          throw new Error("Should not be called");
+        set: function(region, endpoint, cacheStrategy, data) { // eslint-disable-line no-unused-vars
+          throw new Error('Should not be called');
         }
       });
 
@@ -314,20 +312,18 @@ describe("Riot queue", function() {
       });
     });
 
-    it("should not call the getter function when cache is disabled", function(done) {
+    it('should not call the getter function when cache is disabled', function(done) {
       nock('https://euw1.api.riotgames.com')
         .get('/cacheable')
         .query(true)
         .reply(200, {ok: true});
 
-      var riotRequest = new RiotRequest("fake", {
-        get: function(region, endpoint, cb) {
-          // jshint unused:false
-          throw new Error("get() should not be called!");
+      var riotRequest = new RiotRequest('fake', {
+        get: function(region, endpoint, cb) { // eslint-disable-line no-unused-vars
+          throw new Error('get() should not be called!');
         },
-        set: function(region, endpoint, cacheStrategy, data) {
-          // jshint unused:false
-          throw new Error("set() should not be called!");
+        set: function(region, endpoint, cacheStrategy, data) { // eslint-disable-line no-unused-vars
+          throw new Error('set() should not be called!');
         }
       });
 
@@ -339,7 +335,7 @@ describe("Riot queue", function() {
       });
     });
 
-    it("should use the pre-cache when rate limited", function(done) {
+    it('should use the pre-cache when rate limited', function(done) {
       // Set rate limit to 1
       nock('https://euw1.api.riotgames.com')
         .get('/throttle')
@@ -363,16 +359,15 @@ describe("Riot queue", function() {
         .query(true)
         .reply(200, {ok: true});
 
-      var riotRequest = new RiotRequest("fake", {
+      var riotRequest = new RiotRequest('fake', {
         get: function(region, endpoint, cb) {
-          if(endpoint === "/cacheable") {
+          if (endpoint === '/cacheable') {
             return cb(null, {cache: true});
           }
-          throw new Error("get() should not be called for " + endpoint);
+          throw new Error('get() should not be called for ' + endpoint);
         },
-        set: function(region, endpoint, cacheStrategy, data) {
-          // jshint unused:false
-          throw new Error("set() should not be called!");
+        set: function(region, endpoint, cacheStrategy, data) { // eslint-disable-line no-unused-vars
+          throw new Error('set() should not be called!');
         }
       });
 
@@ -394,7 +389,7 @@ describe("Riot queue", function() {
       });
     });
 
-    it("should decrease concurrency when throttler is set for a single platform", function(done) {
+    it('should decrease concurrency when throttler is set for a single platform', function(done) {
       // Set rate limit to 100
       nock('https://euw1.api.riotgames.com')
         .get('/throttle')
@@ -406,7 +401,7 @@ describe("Riot queue", function() {
           'x-method-rate-limit': '100:1'
         });
       // Set throttler to 50
-      var riotRequest = new RiotRequest("fake");
+      var riotRequest = new RiotRequest('fake');
       riotRequest.setThrottle('EUW1', 'test', 50);
 
       riotRequest.request('EUW1', 'test', '/throttle', function() {
@@ -416,7 +411,7 @@ describe("Riot queue", function() {
       });
     });
 
-    it("should decrease concurrency when throttler is set for all platforms", function(done) {
+    it('should decrease concurrency when throttler is set for all platforms', function(done) {
       // Set rate limit to 100
       nock('https://euw1.api.riotgames.com')
         .get('/throttle')
@@ -428,7 +423,7 @@ describe("Riot queue", function() {
           'x-method-rate-limit': '100:1'
         });
       // Set throttler to 50
-      var riotRequest = new RiotRequest("fake");
+      var riotRequest = new RiotRequest('fake');
       riotRequest.setThrottle('test', 50);
 
       riotRequest.request('EUW1', 'test', '/throttle', function() {
@@ -439,26 +434,26 @@ describe("Riot queue", function() {
     });
   });
 
-  describe("Regions", function() {
-    it("should be exposed on riotRequest", function() {
-      var riotRequest = new RiotRequest("fake");
+  describe('Regions', function() {
+    it('should be exposed on riotRequest', function() {
+      var riotRequest = new RiotRequest('fake');
       assert.ok(riotRequest.REGIONS.indexOf('euw') !== -1);
     });
   });
 
-  describe("Platforms", function() {
-    it("should be exposed on riotRequest", function() {
-      var riotRequest = new RiotRequest("fake");
+  describe('Platforms', function() {
+    it('should be exposed on riotRequest', function() {
+      var riotRequest = new RiotRequest('fake');
       assert.ok(riotRequest.PLATFORMS.indexOf('EUW1') !== -1);
     });
 
-    it("should be available on riotRequest", function() {
-      var riotRequest = new RiotRequest("fake");
+    it('should be available on riotRequest', function() {
+      var riotRequest = new RiotRequest('fake');
       assert.ok(riotRequest.getPlatformFromRegion('euw'), 'EUW1');
     });
 
-    it("should be available on riotRequest with any casing", function() {
-      var riotRequest = new RiotRequest("fake");
+    it('should be available on riotRequest with any casing', function() {
+      var riotRequest = new RiotRequest('fake');
       assert.ok(riotRequest.getPlatformFromRegion('EUW'), 'EUW1');
     });
   });

@@ -31,7 +31,6 @@ jobs:
       - run: echo 127.0.0.1 na.api.riotgames.com | sudo tee -a /etc/hosts
       - run: npm test
       - run: npm run lint
-      - run: npm run style
       # Run tests again, but this time display them in the output
       - run:
           name: Coverage & junit

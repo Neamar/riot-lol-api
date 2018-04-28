@@ -5,9 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "NODE_ENV=test mocha --recursive -t 500 test/ --reporter ${MOCHA_REPORTER:-spec}",
-    "lint": "jshint lib/ test/",
-    "coverage": "NODE_ENV=test istanbul cover ./node_modules/.bin/_mocha --  --recursive -t 5000 test/ --reporter ${MOCHA_REPORTER:-spec} --exit",
-    "style": "jscs ."
+    "lint": "eslint .",
+    "coverage": "NODE_ENV=test istanbul cover ./node_modules/.bin/_mocha --  --recursive -t 5000 test/ --reporter ${MOCHA_REPORTER:-spec} --exit"
   },
   "repository": {
     "type": "git",
@@ -23,14 +22,13 @@
     "agentkeepalive": "^3.4.1",
     "async": "^2.6.0",
     "debug": "^3.1.0",
+    "eslint": "^4.19.1",
     "rarity": "^2.1.1",
     "request": "^2.85.0",
     "superagent": "^3.8.2"
   },
   "devDependencies": {
     "istanbul": "^0.4.5",
-    "jscs": "^3.0.7",
-    "jshint": "^2.9.5",
     "mocha": "^5.1.1",
     "mocha-junit-reporter": "^1.17.0",
     "nock": "^9.2.5",

@@ -1,0 +1,89 @@
+{
+    "extends": "eslint:recommended",
+    "env": {
+        "browser": true,
+        "es6": true,
+        "node": true
+    },
+    "globals": {
+        "describe": false,
+        "it": false,
+        "$": false,
+        "before": false,
+        "beforeEach": false,
+        "after": false,
+        "afterEach": false,
+        "expect": false
+    },
+    "parserOptions": {
+        "ecmaVersion": 8
+    },
+    "rules": {
+        "no-console": "off",
+        "no-constant-condition": "off",
+        "indent": [
+            "error",
+            2,
+            {
+                "SwitchCase": 1
+            }
+        ],
+        "linebreak-style": [
+            "error",
+            "unix"
+        ],
+        "quotes": [
+            "error",
+            "single",
+            {
+                "avoidEscape": true
+            }
+        ],
+        "semi": [
+            "error",
+            "always"
+        ],
+        "keyword-spacing": [
+            "error"
+        ],
+        "space-before-function-paren": [
+            2,
+            "never"
+        ],
+        "array-bracket-spacing": [
+            2,
+            "never"
+        ],
+        "space-in-parens": [
+            2,
+            "never"
+        ],
+        "key-spacing": 2,
+        "one-var": [
+            2,
+            "never"
+        ],
+        "no-trailing-spaces": 2,
+        "func-call-spacing": 2,
+        "no-with": 2,
+        "spaced-comment": [
+            2,
+            "always"
+        ],
+        "space-infix-ops": 2,
+        "comma-style": [
+            2,
+            "last"
+        ],
+        "space-before-blocks": [
+            2,
+            "always"
+        ],
+        "brace-style": [
+            2,
+            "stroustrup"
+        ],
+        "eol-last": 2,
+        "dot-notation": 2
+    }
+}

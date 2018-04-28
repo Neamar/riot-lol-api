@@ -20,22 +20,22 @@
   },
   "homepage": "https://github.com/Neamar/riot-lol-api#readme",
   "dependencies": {
-    "agentkeepalive": "^3.2.0",
-    "async": "^2.1.2",
-    "debug": "^3.0.0",
+    "agentkeepalive": "^3.4.1",
+    "async": "^2.6.0",
+    "debug": "^3.1.0",
     "rarity": "^2.1.1",
     "request": "^2.85.0",
-    "superagent": "^3.3.1"
+    "superagent": "^3.8.2"
   },
   "devDependencies": {
     "istanbul": "^0.4.5",
     "jscs": "^3.0.7",
-    "jshint": "^2.9.1",
-    "mocha": "^5.0.0",
+    "jshint": "^2.9.5",
+    "mocha": "^5.1.1",
     "mocha-junit-reporter": "^1.17.0",
-    "nock": "^9.1.5",
-    "sinon": "^4.0.0",
-    "supertest": "^2.0.1"
+    "nock": "^9.2.5",
+    "sinon": "^4.5.0",
+    "supertest": "^3.0.0"
   },
   "engines": {
     "node": ">=8.0.0"

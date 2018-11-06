@@ -1,0 +1,4 @@
+test/
+.circleci/
+.eslintignore
+.eslintrc.json

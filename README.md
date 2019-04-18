@@ -85,6 +85,11 @@ riotRequest.request('euw1', 'champion-mastery', '/lol/champion-mastery/v3/champi
 riotRequest.request('euw1', 'league', '/lol/league/v3/positions/by-summoner/4203456', function(err, data) {});
 ```
 
+## Settings
+The `RiotRequest` constructor has a third parameter that is used to pass options.\
+Here is a list of available options:\
+* `defaultRetryPeriod` (Default: 10) - The retry period to use if the `Retry-After` header is not present (Numeric).
+
 ## Logging
 The library use `debug` for logging. To see logs, set this environment variable: `DEBUG=riot-lol-api:*`.
 

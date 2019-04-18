@@ -86,7 +86,7 @@ riotRequest.request('euw1', 'league', '/lol/league/v3/positions/by-summoner/4203
 ```
 
 ## Settings
-The `RiotRequest` constructure has a third parameter that is used to pass options.\
+The `RiotRequest` constructor has a third parameter that is used to pass options.\
 Here is a list of available options:\
 * `defaultRetryPeriod` (Default: 10) - The retry period to use if the `Retry-After` header is not present (Numeric).
 
@@ -116,7 +116,7 @@ Honestly, skip this section if you're using the library for the first time. I st
 Use case:
 
 * throttle some process to ensure other processes always have enough requests available.
-
+ 
 Let's say you have a worker downloading games in the background, and you also have a frontend that can request games from the API in realtime to answer user requests. You always want the frontend to be able to request in realtime, but by default it's very likely your worker will use all capacity every 10s.
 To prevent this, the library exposes a method named `setThrottle(platform, method, throttle)` (and `setThrottle(method, throttle)` which is automatically applied to all platforms).
 

@@ -25,6 +25,16 @@ describe('Riot queue', function() {
         },
         /invalid cache object/i);
     });
+
+    it('should set up default options when not specified', function() {
+      let rr = new RiotRequest(123);
+      assert.equal(rr.options.defaultRetryPeriod, 10);
+    });
+
+    it('should use specified options', function() {
+      let rr = new RiotRequest(123, false, {defaultRetryPeriod: 2});
+      assert.equal(rr.options.defaultRetryPeriod, 2);
+    });
   });
 
   describe('Requester without cache', function() {

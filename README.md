@@ -105,7 +105,7 @@ HTTP errrors on the Riot API side will expose three properties:
 Please remember that the library will automatically retry once when it receives a 500 and 503.
 
 ## Dealing with regions and platforms
-For convenience, the library exposes a function `getPlatformFromRegion()` that takes a region as parameter (e.g "euw") and returns the associaed platform to use with the Riot API ("EUW1"). This can be useful for building URLs.
+For convenience, the library exposes a function `getPlatformFromRegion()` that takes a region as parameter (e.g "euw") and returns the associated platform to use with the Riot API ("EUW1"). This can be useful for building URLs.
 
 Additionally, there is also a `.REGIONS` property with an array of all valid Riot regions lowercased.
 

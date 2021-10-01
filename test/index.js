@@ -466,5 +466,10 @@ describe('Riot queue', function() {
       var riotRequest = new RiotRequest('fake');
       assert.ok(riotRequest.getPlatformFromRegion('EUW'), 'EUW1');
     });
+
+    it('should work for cluster names', function() {
+      var riotRequest = new RiotRequest('fake');
+      assert.ok(riotRequest.getClusterFromRegion('EUW'), 'europe');
+    });
   });
 });

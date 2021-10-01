@@ -1,6 +1,6 @@
 {
   "name": "riot-lol-api",
-  "version": "4.3.3",
+  "version": "4.3.4",
   "description": "Small helper to handle Riot API rate limiting and server errors",
   "main": "lib/index.js",
   "scripts": {

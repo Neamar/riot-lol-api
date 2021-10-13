@@ -27,4 +27,12 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm install
+    
+    # Every test should be fully mocked, or fail.
+    # This remove network conenctivity to the domains used for communicating with the API
+    # Also note that the test environment doesn't have a valid API key in environment
+    - run: echo 127.0.0.1 ddragon.leagueoflegends.com | sudo tee -a /etc/hosts
+    - run: echo 127.0.0.1 euw.api.riotgames.com | sudo tee -a /etc/hosts
+    - run: echo 127.0.0.1 na.api.riotgames.com | sudo tee -a /etc/hosts
+
     - run: npm test
